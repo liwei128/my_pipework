@@ -6,3 +6,6 @@
 dockerName为容器名
 
 dockerIp为容器指定的IP地址
+
+
+ps:恢复原有IP配置，只需要运行 ./restartIp.sh

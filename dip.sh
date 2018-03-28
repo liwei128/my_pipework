@@ -17,7 +17,7 @@ function checkParameter(){
       baseIp=$(echo ${dockerIp}|cut -d . -f1-3)
       dip=$(echo "$dip"|grep ^${baseIp})
       gateway=$(echo "$gateway"|grep ^${baseIp})
-      name=$(ip addr|grep -B 2 ${dip}|sed -n "1p"|awk '{print $2}'|cut  -d : -f 1)
+      name=$(ip addr|grep -B 2 ${dip}|sed -n "1p"|awk '{print $2}'|cut  -d : -f 1|cut -d @ -f 1)
       echo "网关${gateway}  ip${dip}  网卡${name}"
 
       if [ "$dip" = "" ];then
@@ -34,22 +34,14 @@ function checkParameter(){
 }
 #为docker容器设置独立Ip
 function setIp(){
-        if [ ! "$name" = "br0" ];then
-	     sudo brctl addbr br0
+        if [ ! "$name" = "br0" ];then 
              sudo ip addr del dev ${name} ${dip}/24
+	     sudo ip link add link ${name} dev br0 type macvlan mode bridge
 	     sudo ip addr add ${dip}/24 dev br0
 	     sudo ip link set dev br0 up
 	     sudo ip route add default via ${gateway} dev br0
-             sudo brctl addif br0 ${name} 
-         fi
-	msg=$(pipework br0 ${dockerName} ${dockerIp}/24@${gateway})
-	if [ "$msg" = "" ];then
-	   service network restart
-	   echo "Success:${dockerName}-->${dockerIp}"
-   	else
-           echo "Fail:${msg}"
-	fi
-	echo "nameserver 114.114.114.114">> /etc/resolv.conf
+        fi
+	sudo pipework br0 ${dockerName} ${dockerIp}/24@${gateway}
 }
 
 #检查安装网桥工具
@@ -61,7 +53,7 @@ function installBridge(){
 }
 #检查安装git
 function installGit(){
-      gits=$(yum list installed|grep '^git')
+      gits=$(git --version|grep '^git version')
       if [ "$gits" = "" ];then
           yum install -y git
       fi
@@ -69,12 +61,12 @@ function installGit(){
 
 #检查安装pipework
 function installPipework(){
-	if [ ! -e "/usr/local/bin/pipework" ];then
+	if [ ! -e "/usr/bin/pipework" ];then
 	   git clone https://github.com/jpetazzo/pipework.git
-           cp  pipework/pipework /usr/local/bin/
+           cp  pipework/pipework /usr/bin/
+	   chmod +x /usr/bin/pipework
            rm -rf pipework
         fi
-	chmod +x /usr/local/bin/pipework
 }
 
 
