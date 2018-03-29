@@ -44,13 +44,6 @@ function setIp(){
 	sudo pipework br0 ${dockerName} ${dockerIp}/24@${gateway}
 }
 
-#检查安装网桥工具
-function installBridge(){
-      bridge=$(yum list installed|grep 'bridge-utils')
-      if [ "$bridge" = "" ];then
-	  yum install -y bridge-utils
-      fi
-}
 #检查安装git
 function installGit(){
       gits=$(git --version|grep '^git version')
@@ -72,6 +65,5 @@ function installPipework(){
 
 checkParameter
 installGit
-installBridge
 installPipework
 setIp
